@@ -66,7 +66,7 @@ def handleParameters(argv):
 
 def displayHelp():
     print('Usage:')
-    print('test.py -i <inputfile> -o <outputfile> -l {srcLang:translateLang}')
+    print('and-translator.py -i <inputfile> -o <outputfile> -l {srcLang:translateLang}')
 
 def init():
 
