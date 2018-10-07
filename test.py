@@ -1,15 +1,19 @@
 #!/usr/bin/python3
 from xml.dom import minidom
-import subprocess
+import sys, subprocess, getopt
+
+inputFile = ''
+outputFile = ''
+toFromLangs = ''
 
 def translate(value):
-    print("Translating " + value)
-    args = ['vertaler', 'en:hi', value]
+    # print("Translating " + value)
+    args = ['vertaler', toFromLangs, value]
     translated = subprocess.check_output(args)
     return translated.decode('utf-8').rstrip()
 
 def writeToFile(data):
-    f =  open("newfile.xml", "w")
+    f =  open(outputFile, "w")
     f.write(data)
     f.close()
     
@@ -22,23 +26,59 @@ def splitAndTranslate(xmlStringsList):
     
     retrievedList = singleLineString.split("\n")
 
-    print("Retrieved list length:")
-    print(len(retrievedList))
+    print("\nRetrieved list length:", len(retrievedList))
 
     for index in range(len(xmlStringsList)):
         xmlStringsList[index].firstChild.nodeValue = retrievedList[index]
 
     return xmlStringsList
     
+def handleParameters(argv):
+    global inputFile
+    global outputFile
+    global toFromLangs
+
+    try:
+        opts, args = getopt.getopt(argv,"hi:o:l:",["ifile=","ofile=","lang="])
+    except getopt.GetoptError:
+        displayHelp()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            displayHelp()
+            sys.exit()
+        elif opt in ("-i", "--ifile"):
+            inputFile = arg
+        elif opt in ("-o", "--ofile"):
+            outputFile = arg
+        elif opt in ("-l", "--lang"):
+            toFromLangs = arg
+        else:
+            displayHelp()
+
+    if inputFile == '' or outputFile == '' or toFromLangs == '':
+        displayHelp()
+        sys.exit()
+
+    print("\nSource File: " + inputFile)
+    print("Translate File: " + outputFile)
     
-def initTest():
-    xmldoc = minidom.parse('strings.xml')
+
+def displayHelp():
+    print('Usage:')
+    print('test.py -i <inputfile> -o <outputfile> -l {srcLang:translateLang}')
+
+def init():
+
+    handleParameters(sys.argv[1:])
+
+    xmldoc = minidom.parse(inputFile)
     translateddoc = xmldoc
     itemList = xmldoc.getElementsByTagName('string')
-    numofstrings = print(len(itemList))
+    numofstrings = print("\nNumber of strings to translate: ", len(itemList))
 
     
-    # Split logic
+    # Split content into seperate chunks
     charCount = 0
     chunkCount = 0
     lastIndex = 0
@@ -47,60 +87,22 @@ def initTest():
         item = itemList[index]
         charCount += len(item.firstChild.nodeValue)
         if (charCount >= 3000 or index == len(itemList)-1):
-            print("Chunks length ")
-            print(len(chunks))
+            # print("Chunks length ")
+            # print(len(chunks))
             # chunks[chunkCount] = list(range(lastIndex, index-1))
             chunks[chunkCount] = itemList[lastIndex:index]
             chunkCount += 1
             lastIndex = index
             charCount = 0
 
-    print("Size ")
-    print(chunks)
+    print("Chunk size ", len(chunks))
     
-
     for index in range(len(chunks)):
         splitAndTranslate(chunks[index])
 
     # itemList = splitAndTranslate(itemList)
 
-    print("Done")
     writeToFile(xmldoc.toxml())
-    
+    print("\nDone")
 
-def init():
-    xmldoc = minidom.parse('strings.xml')
-    translateddoc = xmldoc
-    itemList = xmldoc.getElementsByTagName('string')
-    numofstrings = print(len(itemList))
-
-    
-    for item in itemList:
-        translated = translate(item.firstChild.nodeValue)
-        item.firstChild.nodeValue = translated
-        print("Done " + item.firstChild.nodeValue)
-
-    writeToFile(xmldoc.toxml())
-
-
-def initOld():
-    xmldoc = minidom.parse('strings.xml')
-    translateddoc = xmldoc
-    itemList = xmldoc.getElementsByTagName('string')
-    numofstrings = print(len(itemList))
-
-    # print(itemList[0].firstChild.nodeValue)
-    # translated.decode('UTF-8')
-
-    for item in itemList:
-        
-        # translated = translated.strip()
-        translated = translate(item.firstChild.nodeValue)
-        item.firstChild.nodeValue = translated
-        # item.firstChild.nodeValue = bytes(translated, 'utf-8').decode('utf-8', 'ignore')
-        print("Done " + item.firstChild.nodeValue)
-
-    writeToFile(xmldoc.toxml())
-
-
-initTest()
+init()
