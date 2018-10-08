@@ -11,3 +11,6 @@ Vertaler helps you translate texts in your command line with Google Translate
 
 Example: <br/>
 ``` ./and_translator.py -i strings.xml -o strings-es.xml -l en:es ```
+
+### License
+[MIT](https://github.com/shahzar/and-translator/blob/master/LICENSE.md)
